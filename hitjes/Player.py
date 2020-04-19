@@ -102,7 +102,7 @@ class Player:
         )
 
         request = youtube.videos().list(
-            part="snippet,contentDetails,statistics", id=yt_id
+            part="snippet", id=yt_id
         )
         response = request.execute()
         self.titles[yt_id] = response["items"][0]["snippet"]["title"]

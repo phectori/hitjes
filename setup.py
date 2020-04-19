@@ -17,5 +17,10 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    install_requires=[
+          'flask_socketio',
+          'google-api-python-client',
+          'eventlet',
+    ],
     python_requires='>=3.5',
 )
