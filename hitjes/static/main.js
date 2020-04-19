@@ -38,6 +38,34 @@ var history = new Vue({
   }
 })
 
+var submitField = new Vue({
+  el: '#url',
+  data: {
+    // declare message with an empty value
+    url: ''
+  },
+  methods: {
+    submit: function (event) {
+      if (event) {
+            processInput(this.url)
+      }
+    }
+  }
+})
+
+//var submitButton = new Vue({
+//  el: '#submit',
+//  methods: {
+//    submit: function (event) {
+//      if (event) {
+//          if (event) {
+//                processInput(submitField.url)
+//          }
+//      }
+//    }
+//  }
+//})
+
 var socket = io();
 
 socket.on('connect', function() {
@@ -103,32 +131,18 @@ function onPlayerStateChange(event) {
     }
 }
 
-// Below handles input. Todo: change to vue.js implementation
-
-$(document).ready(function(){
-
-    $('#url').keyup(function (e) {
-      if (e.which == 13) {
-        processInput();
-        return false;
-      }
-    });
-
-});
-
 function processInput(input) {
-    var inputString = $("#url").val();
     var regex = /^.*(v=|be\/)(.{11}).*$/g;
-    var match = regex.exec(inputString);
+    var match = regex.exec(input);
 
     if (match.length > 2)
     {
         var found_id = match[2]
-        console.log("Entered:   " + inputString)
+        console.log("Entered:   " + input)
         console.log("Match:     " + found_id);
 
         M.toast({html: 'Requesting: ' + found_id})
-        $('#url').val('');
+        submitField.url = ''
 
         socket.emit('addUrl', found_id);
     }

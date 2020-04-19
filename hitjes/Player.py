@@ -7,7 +7,6 @@ from Error import YoutubeIdMalformedError
 
 
 class Player:
-
     def __init__(self, _broadcast_state, _broadcast_message):
         self.queue = deque([])
         self.history = []
@@ -16,18 +15,18 @@ class Player:
         self.titles = dict()
 
         self.current = dict()
-        self.current['id'] = ''
+        self.current["id"] = ""
         self.timestamp_s = 0
 
     def get_current(self) -> str:
-        return self.current['id']
+        return self.current["id"]
 
     def get_timestamp(self):
         return self.timestamp_s
 
     def update_timestamp(self, _timestamp_s, yt_id):
         """ Always take the highest timestamp of all the clients """
-        if self.current['id'] != yt_id:
+        if self.current["id"] != yt_id:
             return
 
         if self.timestamp_s > _timestamp_s:
@@ -35,12 +34,12 @@ class Player:
 
     def next(self, current_id: str):
         # Only allow next when playing the current id.
-        if self.current['id'] != current_id:
+        if self.current["id"] != current_id:
             logging.info("next: player video id does not match server video id")
             return
 
         # Add to history when not empty
-        if self.current['id'] != '':
+        if self.current["id"] != "":
             self.history.append(self.current)
 
         if len(self.queue) is not 0:
@@ -49,9 +48,11 @@ class Player:
             logging.info("Queue empty")
             if len(self.history) > 0:
                 self.current = random.choice(self.history)
-                self.cb_broadcast_message("Queue empty, selecting a random video from history.")
+                self.cb_broadcast_message(
+                    "Queue empty, selecting a random video from history."
+                )
             else:
-                self.current['id'] = ''
+                self.current["id"] = ""
 
         self.cb_broadcast_state()
 
@@ -64,9 +65,9 @@ class Player:
 
         self.queue.append({"id": yt_id, "title": self.titles[yt_id]})
 
-        if self.current['id'] == '':
+        if self.current["id"] == "":
             # When tot playing anything
-            self.next('')
+            self.next("")
         else:
             self.cb_broadcast_state()
 
@@ -90,14 +91,18 @@ class Player:
 
         api_service_name = "youtube"
         api_version = "v3"
+        # Todo: extract key from implementation
         DEVELOPER_KEY = "AIzaSyCxmSPZ8Bp8v0FeEKES7PP62MSLig2YsLs"
 
         youtube = googleapiclient.discovery.build(
-            api_service_name, api_version, developerKey=DEVELOPER_KEY, cache_discovery=False)
+            api_service_name,
+            api_version,
+            developerKey=DEVELOPER_KEY,
+            cache_discovery=False,
+        )
 
         request = youtube.videos().list(
-            part="snippet,contentDetails,statistics",
-            id=yt_id
+            part="snippet,contentDetails,statistics", id=yt_id
         )
         response = request.execute()
-        self.titles[yt_id] = response['items'][0]["snippet"]["title"]
+        self.titles[yt_id] = response["items"][0]["snippet"]["title"]

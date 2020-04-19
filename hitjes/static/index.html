@@ -8,7 +8,6 @@
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.dev.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.js"></script>
         <script src="https://apis.google.com/js/api.js"></script>
 
@@ -21,25 +20,30 @@
 
         <div id="player"></div>
 
-        <button class="btn waves-effect waves-light" v-on:click="next" id="next">Next
-            <i class="material-icons right">send</i>
-        </button>
+        <div class="row">
+            <button class="btn-large light-blue waves-effect waves-light" v-on:click="next" id="next">Skip
+                <i class="material-icons right">send</i>
+            </button>
+        </div>
 
         <div class="row">
             <div class="input-field col s12">
-                <input placeholder="Enter youtube url" id="url" type="text" class="validate">
+                <input v-model="url" placeholder="Enter youtube url" id="url" type="text" class="validate" v-on:keyup.enter="submit">
             </div>
+<!--            <button type="submit" class="btn-large light-blue waves-effect waves-light" v-on:click="submit" id="submit">Submit-->
+<!--                <i class="material-icons right">add</i>-->
+<!--            </button>-->
         </div>
 
         <ul id="queue" class="collection with-header">
-            <li class="collection-header"><h4>Queue</h4></li>
+            <li class="collection-header"><h5>Queue</h5></li>
             <li v-for="item in items" :key="item.message" class="collection-item">
                 {{ item.title }} <a class="grey-text lighten-1" v-bind:href="'https://youtu.be/' + item.id">https://youtu.be/{{ item.id }}</a>
             </li>
         </ul>
 
         <ul id="history" class="collection with-header">
-            <li class="collection-header"><h4>History</h4></li>
+            <li class="collection-header"><h5>History</h5></li>
             <li v-for="item in items" :key="item.message" class="collection-item">
                 {{ item.title }} <a class="grey-text lighten-1" v-bind:href="'https://youtu.be/' + item.id">https://youtu.be/{{ item.id }}</a>
             </li>
