@@ -5,6 +5,9 @@ from Player import Player
 
 app = Flask(__name__, static_url_path='')
 app.config['SECRET_KEY'] = 'keepitsave'
+
+# disable browser caching for now
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 socketIO = SocketIO(app, cors_allowed_origins='*')
 
 
