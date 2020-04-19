@@ -12,7 +12,7 @@ function createPlayer(yt_id) {
       height: '390',
       width: '640',
       videoId: yt_id,
-      playerVars: { 'autoplay': 1, 'controls': 1, 'disablekb': 1},
+      playerVars: { 'autoplay': 1, 'controls': 0, 'disablekb': 1},
       events: {
         'onReady': onPlayerReady,
         'onStateChange': onPlayerStateChange
@@ -78,6 +78,11 @@ socket.on('state', (state) => {
     }
 });
 
+socket.on('message', (msg) => {
+    console.log(msg)
+    M.toast({html: '' + msg})
+});
+
 var nextButton = new Vue({
   el: '#next',
   methods: {
@@ -123,8 +128,13 @@ function processInput(input) {
         console.log("Match:     " + found_id);
 
         M.toast({html: 'Requesting: ' + found_id})
+        $('#url').val('');
 
         socket.emit('addUrl', found_id);
+    }
+    else
+    {
+        M.toast({html: 'Requesting: ' + found_id})
     }
 }
 

@@ -14,7 +14,13 @@ def broadcast_state():
     emit('state', state, broadcast=True, json=True)
 
 
-player = Player(broadcast_state)
+def broadcast_message(msg: str):
+    print("Broadcasting message" + msg)
+    emit('message', msg, broadcast=True)
+
+
+player = Player(broadcast_state,
+                broadcast_message)
 
 
 @app.route('/')
