@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, send_from_directory
 from flask_socketio import SocketIO, send, emit
+import logging
 
 from Player import Player
 
@@ -10,15 +11,16 @@ app.config['SECRET_KEY'] = 'keepitsave'
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 socketIO = SocketIO(app, cors_allowed_origins='*')
 
+logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s', level=logging.DEBUG)
 
 def broadcast_state():
-    print("Broadcasting state")
+    logging.info("broadcast_state")
     state = get_state()
     emit('state', state, broadcast=True, json=True)
 
 
 def broadcast_message(msg: str):
-    print("Broadcasting message" + msg)
+    logging.info("broadcast_message " + msg)
     emit('message', msg, broadcast=True)
 
 
@@ -28,57 +30,37 @@ player = Player(broadcast_state,
 
 @app.route('/')
 def send_index():
-    print("Index requested")
+    logging.info("send_index")
     return send_from_directory('static', 'index.html')
 
 
 @app.route('/<path:path>')
 def send_static(path):
-    print(path + " requested")
+    logging.info(path + " requested")
     return send_from_directory('static', path)
 
 
 @socketIO.on('message')
 def handle_message(message):
-    print("Message: " + message)
+    logging.info("Received client message: " + message)
 
 
 @socketIO.on('addUrl')
 def handle_add_url(yt_id):
+    logging.info("handle_add_url")
     player.append(yt_id)
-
-
-@socketIO.on('requestQueue')
-def handle_request_queue(_):
-    json = dict()
-    json["queue"] = player.get_queue()
-    send(json, json=True)
-
-
-@socketIO.on('requestHistory')
-def handle_request_history(_):
-    json = dict()
-    json["history"] = player.get_history()
-    send(json, json=True)
-
-
-@socketIO.on('requestCurrent')
-def handle_request_current(_):
-    json = dict()
-    json["current"] = player.get_current()
-    send(json, json=True)
 
 
 @socketIO.on('requestState')
 def handle_request_state():
-    print("State requested")
+    logging.info("handle_request_state")
     json = get_state()
     emit("state", json, json=True)
 
 
 @socketIO.on('requestNext')
 def handle_request_next(current_yt_id):
-    print("Next requested with current id: " + str(current_yt_id))
+    logging.info("Next requested while currently playing: " + str(current_yt_id))
     player.next(str(current_yt_id))
 
 
@@ -92,4 +74,5 @@ def get_state():
 
 
 if __name__ == '__main__':
+    logging.info("Starting socketIO...")
     socketIO.run(app, host='0.0.0.0')

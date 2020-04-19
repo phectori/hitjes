@@ -2,7 +2,8 @@ from collections import deque
 import googleapiclient.discovery
 import random
 import os
-import json
+import logging
+from Error import YoutubeIdMalformedError
 
 
 class Player:
@@ -35,7 +36,7 @@ class Player:
     def next(self, current_id: str):
         # Only allow next when playing the current id.
         if self.current['id'] != current_id:
-            print("next: player video id does not match server video id")
+            logging.info("next: player video id does not match server video id")
             return
 
         # Add to history when not empty
@@ -45,18 +46,20 @@ class Player:
         if len(self.queue) is not 0:
             self.current = self.queue.popleft()
         else:
-            print("Queue empty")
+            logging.info("Queue empty")
             if len(self.history) > 0:
                 self.current = random.choice(self.history)
-            self.cb_broadcast_message("Queue empty, selecting randomly from history.")
+                self.cb_broadcast_message("Queue empty, selecting a random video from history.")
+            else:
+                self.current['id'] = ''
 
         self.cb_broadcast_state()
 
     def append(self, yt_id: str):
         if len(yt_id) != 11:
-            raise YoutubeIdMalformed(yt_id, "Received ID has the wrong length")
+            raise YoutubeIdMalformedError(yt_id, "Received ID has the wrong length")
 
-        print("append: " + yt_id)
+        logging.info("append: " + yt_id)
         self.get_video_title(yt_id)
 
         self.queue.append({"id": yt_id, "title": self.titles[yt_id]})
@@ -68,17 +71,20 @@ class Player:
             self.cb_broadcast_state()
 
     def get_queue(self) -> []:
+        logging.info("get_queue")
         return list(self.queue)
 
     def get_history(self) -> []:
+        logging.info("get_history")
         return self.history
 
     def get_video_title(self, yt_id: str):
+        logging.info("get_video_title")
         if yt_id in self.titles:
             return self.titles[yt_id]
 
         if len(yt_id) != 11:
-            raise YoutubeIdMalformed(yt_id, "Received ID has the wrong length")
+            raise YoutubeIdMalformedError(yt_id, "Received ID has the wrong length")
 
         os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
@@ -87,31 +93,11 @@ class Player:
         DEVELOPER_KEY = "AIzaSyCxmSPZ8Bp8v0FeEKES7PP62MSLig2YsLs"
 
         youtube = googleapiclient.discovery.build(
-            api_service_name, api_version, developerKey=DEVELOPER_KEY)
+            api_service_name, api_version, developerKey=DEVELOPER_KEY, cache_discovery=False)
 
         request = youtube.videos().list(
             part="snippet,contentDetails,statistics",
             id=yt_id
         )
         response = request.execute()
-
-        print(response)
         self.titles[yt_id] = response['items'][0]["snippet"]["title"]
-
-
-class Error(Exception):
-    """Base class for exceptions in this module."""
-    pass
-
-
-class YoutubeIdMalformed(Error):
-    """Exception raised for errors in the input.
-
-    Attributes:
-        yt_id -- the malformed id
-        message -- explanation of the error
-    """
-
-    def __init__(self, yt_id: str, message: str):
-        self.yt_id = yt_id
-        self.message = message

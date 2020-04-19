@@ -42,7 +42,7 @@ var socket = io();
 
 socket.on('connect', function() {
     console.log("Connected")
-    socket.emit('message', 'I\'m connected!');
+    socket.emit('message', 'New client connected');
     socket.emit('requestState')
 });
 
