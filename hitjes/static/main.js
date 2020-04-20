@@ -28,6 +28,22 @@ var queue = new Vue({
   el: '#queue',
   data: {
     items: []
+  },
+  methods: {
+    dragStart:function(event)  {
+      event.preventDefault()
+    },
+    dragging:function(event) {
+      event.preventDefault()
+    },
+    allowDrop: function(event) {
+      event.preventDefault();
+    },
+    drop: function(event) {
+      event.preventDefault();
+      var data = event.dataTransfer.getData("Text");
+      processInput(data);
+    }
   }
 })
 
@@ -49,28 +65,6 @@ var submitField = new Vue({
       if (event) {
             processInput(this.url)
       }
-    }
-  }
-})
-
-var contentField = new Vue({
-  el: '#drop',
-  data: {
-  },
-  methods: {
-    dragStart:function(event)  {
-      event.preventDefault()
-    },
-    dragging:function(event) {
-      event.preventDefault()
-    },
-    allowDrop: function(event) {
-      event.preventDefault();
-    },
-    drop: function(event) {
-      event.preventDefault();
-      var data = event.dataTransfer.getData("Text");
-      processInput(data);
     }
   }
 })

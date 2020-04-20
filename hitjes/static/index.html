@@ -18,8 +18,6 @@
 
     <div class="container">
 
-        <div id="drop" v-on:drop="drop" v-on:dragover="allowDrop"></div>
-
         <div id="player"></div>
 
         <div class="row">
@@ -34,8 +32,8 @@
             </div>
         </div>
 
-        <ul id="queue" class="collection with-header">
-            <li class="collection-header"><h5>Queue</h5></li>
+        <ul id="queue" class="collection with-header" v-on:drop="drop" v-on:dragover="allowDrop">
+            <li class="collection-header"><h5>Queue</h5><span class="grey-text lighten-1"> You can drop youtube links anywhere on the queue</span></li>
             <li v-for="item in items" :key="item.message" class="collection-item">
                 {{ item.title }} <a class="grey-text lighten-1" v-bind:href="'https://youtu.be/' + item.id">https://youtu.be/{{ item.id }}</a>
             </li>

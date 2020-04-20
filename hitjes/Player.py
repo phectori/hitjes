@@ -1,4 +1,5 @@
 from collections import deque
+from collections import defaultdict
 import googleapiclient.discovery
 import random
 import os
@@ -9,10 +10,10 @@ from Error import YoutubeIdMalformedError
 class Player:
     def __init__(self, _broadcast_state, _broadcast_message):
         self.queue = deque([])
-        self.history = []
+        self.history = deque([])
         self.cb_broadcast_state = _broadcast_state
         self.cb_broadcast_message = _broadcast_message
-        self.titles = dict()
+        self.titles = defaultdict(lambda: '')
 
         self.current = dict()
         self.current["id"] = ""
@@ -40,14 +41,14 @@ class Player:
 
         # Add to history when not empty
         if self.current["id"] != "":
-            self.history.append(self.current)
+            self.history.appendleft(self.current)
 
         if len(self.queue) is not 0:
             self.current = self.queue.popleft()
         else:
             logging.info("Queue empty")
             if len(self.history) > 0:
-                self.current = random.choice(self.history)
+                self.current = random.choice(list(self.history))
                 self.cb_broadcast_message(
                     "Queue empty, selecting a random video from history."
                 )
@@ -61,7 +62,10 @@ class Player:
             raise YoutubeIdMalformedError(yt_id, "Received ID has the wrong length")
 
         logging.info("append: " + yt_id)
-        self.get_video_title(yt_id)
+        try:
+            self.get_video_title(yt_id)
+        except:
+            logging.error('Failed to get video title')
 
         self.queue.append({"id": yt_id, "title": self.titles[yt_id]})
 
@@ -77,7 +81,7 @@ class Player:
 
     def get_history(self) -> []:
         logging.info("get_history")
-        return self.history
+        return list(self.history)
 
     def get_video_title(self, yt_id: str):
         logging.info("get_video_title")
