@@ -53,18 +53,27 @@ var submitField = new Vue({
   }
 })
 
-//var submitButton = new Vue({
-//  el: '#submit',
-//  methods: {
-//    submit: function (event) {
-//      if (event) {
-//          if (event) {
-//                processInput(submitField.url)
-//          }
-//      }
-//    }
-//  }
-//})
+var contentField = new Vue({
+  el: '#drop',
+  data: {
+  },
+  methods: {
+    dragStart:function(event)  {
+      event.preventDefault()
+    },
+    dragging:function(event) {
+      event.preventDefault()
+    },
+    allowDrop: function(event) {
+      event.preventDefault();
+    },
+    drop: function(event) {
+      event.preventDefault();
+      var data = event.dataTransfer.getData("Text");
+      processInput(data);
+    }
+  }
+})
 
 var socket = io();
 

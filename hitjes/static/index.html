@@ -18,6 +18,8 @@
 
     <div class="container">
 
+        <div id="drop" v-on:drop="drop" v-on:dragover="allowDrop"></div>
+
         <div id="player"></div>
 
         <div class="row">
@@ -30,9 +32,6 @@
             <div class="input-field col s12">
                 <input v-model="url" placeholder="Enter youtube url" id="url" type="text" class="validate" v-on:keyup.enter="submit">
             </div>
-<!--            <button type="submit" class="btn-large light-blue waves-effect waves-light" v-on:click="submit" id="submit">Submit-->
-<!--                <i class="material-icons right">add</i>-->
-<!--            </button>-->
         </div>
 
         <ul id="queue" class="collection with-header">
