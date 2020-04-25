@@ -90,18 +90,18 @@ socket.on('state', (state) => {
         history.items.push(entry)
     });
 
-    if (state.current === "")
+    if (state.currentId === "")
         return
 
     if (player == null)
     {
-        createPlayer(state.current)
+        createPlayer(state.currentId)
     }
-    else if (player.getVideoData().video_id != state.current ||
+    else if (player.getVideoData().video_id != state.currentId ||
              player.getPlayerState() == YT.PlayerState.ENDED)
     {
-        player.loadVideoById(state.current, state.timestamp)
-        M.toast({html: 'Playing: ' + state.current})
+        player.loadVideoById(state.currentId, state.timestamp)
+        M.toast({html: 'Playing: ' + state.currentTitle})
     }
     else
     {
@@ -120,9 +120,9 @@ var nextButton = new Vue({
     next: function (event) {
       if (event) {
         if (player !== null)
-            socket.emit('requestNext', '' + player.getVideoData().video_id)
+            socket.emit('requestSkip', '' + player.getVideoData().video_id)
         else
-            socket.emit('requestNext', '')
+            socket.emit('requestSkip', '')
       }
     }
   }
@@ -144,14 +144,14 @@ function processInput(input) {
         console.log("Entered:   " + input)
         console.log("Match:     " + found_id);
 
-        M.toast({html: 'Requesting: ' + found_id})
+        //M.toast({html: 'Requesting: ' + found_id})
         submitField.url = ''
 
         socket.emit('addUrl', found_id);
     }
     else
     {
-        M.toast({html: 'Requesting: ' + found_id})
+        M.toast({html: 'Failed to parse url'})
     }
 }
 

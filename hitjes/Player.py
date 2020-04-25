@@ -4,6 +4,7 @@ import googleapiclient.discovery
 import random
 import os
 import logging
+import threading
 from Error import YoutubeIdMalformedError
 
 
@@ -15,12 +16,19 @@ class Player:
         self.cb_broadcast_message = _broadcast_message
         self.titles = defaultdict(lambda: '')
 
+        # Semaphore for next function
+        self.sem = threading.Semaphore()
+
         self.current = dict()
         self.current["id"] = ""
+        self.current["title"] = ""
         self.timestamp_s = 0
 
     def get_current(self) -> str:
         return self.current["id"]
+
+    def get_current_title(self) -> str:
+        return self.current["title"]
 
     def get_timestamp(self):
         return self.timestamp_s
@@ -34,6 +42,8 @@ class Player:
             self.timestamp_s = _timestamp_s
 
     def next(self, current_id: str):
+        self.sem.acquire()
+
         # Only allow next when playing the current id.
         if self.current["id"] != current_id:
             logging.info("next: player video id does not match server video id")
@@ -55,6 +65,8 @@ class Player:
             else:
                 self.current["id"] = ""
 
+        self.sem.release()
+
         self.cb_broadcast_state()
 
     def append(self, yt_id: str):
@@ -62,12 +74,16 @@ class Player:
             raise YoutubeIdMalformedError(yt_id, "Received ID has the wrong length")
 
         logging.info("append: " + yt_id)
+        title = ""
         try:
-            self.get_video_title(yt_id)
+            title = self.get_video_title(yt_id)
+            logging.info("Got title: '{}'".format(title))
         except:
             logging.error('Failed to get video title')
 
-        self.queue.append({"id": yt_id, "title": self.titles[yt_id]})
+        self.queue.append({"id": yt_id, "title": title})
+
+        self.cb_broadcast_message("Added: {}".format(title))
 
         if self.current["id"] == "":
             # When tot playing anything
@@ -76,14 +92,12 @@ class Player:
             self.cb_broadcast_state()
 
     def get_queue(self) -> []:
-        logging.info("get_queue")
         return list(self.queue)
 
     def get_history(self) -> []:
-        logging.info("get_history")
         return list(self.history)
 
-    def get_video_title(self, yt_id: str):
+    def get_video_title(self, yt_id: str) -> str:
         logging.info("get_video_title")
         if yt_id in self.titles:
             return self.titles[yt_id]
@@ -109,4 +123,9 @@ class Player:
             part="snippet", id=yt_id
         )
         response = request.execute()
-        self.titles[yt_id] = response["items"][0]["snippet"]["title"]
+        title = response["items"][0]["snippet"]["title"]
+
+        if len(title) > 0:
+            self.titles[yt_id] = title
+
+        return title
