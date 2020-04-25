@@ -5,6 +5,7 @@ import random
 import os
 import logging
 import threading
+import time
 from Error import YoutubeIdMalformedError
 
 
@@ -19,12 +20,15 @@ class Player:
         self.google_api_key = str(_config["googleapi"].get("DeveloperKey", ""))
 
         # Semaphore for next function
-        self.sem = threading.Semaphore()
+        self.sem_next = threading.Semaphore()
+        self.sem_update_timestamp = threading.Semaphore()
 
         self.current = dict()
         self.current["id"] = ""
         self.current["title"] = ""
-        self.timestamp_s = 0
+
+        # Timestamp
+        self.timestamp_s = 0.0
 
     def get_current(self) -> str:
         return self.current["id"]
@@ -32,19 +36,21 @@ class Player:
     def get_current_title(self) -> str:
         return self.current["title"]
 
-    def get_timestamp(self):
+    def get_timestamp(self) -> float:
         return self.timestamp_s
 
-    def update_timestamp(self, _timestamp_s, yt_id):
-        """ Always take the highest timestamp of all the clients """
-        if self.current["id"] != yt_id:
-            return
+    def update_timestamp(self, yt_id: str, _timestamp_s: float):
+        self.sem_update_timestamp.acquire()
 
-        if self.timestamp_s > _timestamp_s:
-            self.timestamp_s = _timestamp_s
+        """ Always take the highest timestamp of all the clients """
+        if self.get_current() == yt_id:
+            if _timestamp_s > self.timestamp_s:
+                self.timestamp_s = _timestamp_s
+
+        self.sem_update_timestamp.release()
 
     def next(self, current_id: str):
-        self.sem.acquire()
+        self.sem_next.acquire()
 
         # Only allow next when playing the current id.
         if self.current["id"] != current_id:
@@ -67,7 +73,10 @@ class Player:
             else:
                 self.current["id"] = ""
 
-        self.sem.release()
+        # Reset timestamp
+        self.timestamp_s = 0.0
+
+        self.sem_next.release()
 
         self.cb_broadcast_state()
 

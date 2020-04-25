@@ -79,6 +79,11 @@ def handle_request_next(current_yt_id):
     player.next(str(current_yt_id))
 
 
+@socketIO.on("requestUpdateTimestamp")
+def handle_request_next(data):
+    player.update_timestamp(data['id'], float(data['timestamp']))
+
+
 def get_state():
     state = dict()
     state["currentId"] = player.get_current()

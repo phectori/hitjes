@@ -7,7 +7,8 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 function onYouTubeIframeAPIReady() {
 
 var player = null;
-function createPlayer(yt_id) {
+var timestamp = 0
+function createPlayer(yt_id, timestamp) {
     player = new YT.Player('player', {
       height: '390',
       width: '640',
@@ -22,6 +23,7 @@ function createPlayer(yt_id) {
 
 function onPlayerReady(event) {
     event.target.playVideo();
+    event.target.seekTo(timestamp, true)
 }
 
 var queue = new Vue({
@@ -90,22 +92,26 @@ socket.on('state', (state) => {
         history.items.push(entry)
     });
 
+    timestamp = parseFloat(state.timestamp)
+
     if (state.currentId === "")
         return
 
     if (player == null)
     {
-        createPlayer(state.currentId)
+        createPlayer(state.currentId, timestamp)
     }
     else if (player.getVideoData().video_id != state.currentId ||
              player.getPlayerState() == YT.PlayerState.ENDED)
     {
-        player.loadVideoById(state.currentId, state.timestamp)
+        player.loadVideoById(state.currentId, timestamp)
         M.toast({html: 'Playing: ' + state.currentTitle})
     }
     else
     {
-        //player.seekTo(state.timestamp, true)
+        if( player.getCurrentTime() - 2 > timestamp ||
+            player.getCurrentTime() + 2 < timestamp)
+            player.seekTo(timestamp, true)
     }
 });
 
@@ -128,9 +134,24 @@ var nextButton = new Vue({
   }
 })
 
+updateTimestampTimer = null
 function onPlayerStateChange(event) {
     if (event.data == YT.PlayerState.ENDED) {
         socket.emit('requestNext', '' + player.getVideoData().video_id)
+    }
+    if (event.data == YT.PlayerState.PLAYING) {
+        clearTimeout(updateTimestampTimer);
+        updateTimestampTimer = setTimeout(updateTimestamp, 1000);
+    }
+}
+
+function updateTimestamp()
+{
+    // Only update when playing
+    if (player.getPlayerState() == YT.PlayerState.PLAYING)
+    {
+        socket.emit('requestUpdateTimestamp', {id: player.getVideoData().video_id, timestamp: player.getCurrentTime()})
+        setTimeout(updateTimestamp, 1000);
     }
 }
 
