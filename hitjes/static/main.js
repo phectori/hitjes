@@ -7,6 +7,7 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 function onYouTubeIframeAPIReady() {
 
 var player = null;
+var playerReady = false
 var timestamp = 0
 function createPlayer(yt_id, timestamp) {
     player = new YT.Player('player', {
@@ -22,6 +23,7 @@ function createPlayer(yt_id, timestamp) {
 }
 
 function onPlayerReady(event) {
+    playerReady = true
     event.target.playVideo();
     event.target.seekTo(timestamp, true)
 }
@@ -71,6 +73,13 @@ var submitField = new Vue({
   }
 })
 
+var listenerCounter = new Vue({
+  el: '#listenerCounter',
+  data: {
+    clients: []
+  }
+})
+
 var socket = io();
 
 socket.on('connect', function() {
@@ -92,12 +101,14 @@ socket.on('state', (state) => {
         history.items.push(entry)
     });
 
+    listenerCounter.clients = state.clients
+
     timestamp = parseFloat(state.timestamp)
 
     if (state.currentId === "")
         return
 
-    if (player == null)
+    if (!playerReady)
     {
         createPlayer(state.currentId, timestamp)
     }
@@ -147,6 +158,9 @@ function onPlayerStateChange(event) {
 
 function updateTimestamp()
 {
+    if (!playerReady)
+        return;
+
     // Only update when playing
     if (player.getPlayerState() == YT.PlayerState.PLAYING)
     {

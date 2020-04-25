@@ -20,10 +20,13 @@
 
         <div id="player"></div>
 
-        <div class="row">
-            <button class="btn-large light-blue waves-effect waves-light" v-on:click="next" id="next">Skip
+        <div class="row valign-wrapper">
+            <button class="btn-large light-blue waves-effect waves-light s10" v-on:click="next" id="next">Skip
                 <i class="material-icons right">send</i>
             </button>
+            <span id="listenerCounter" class="badge s2" v-bind:value="clients">{{clients.length}}
+                <i class="material-icons right">people</i>
+            </span>
         </div>
 
         <div class="row">
@@ -42,7 +45,14 @@
         <ul id="history" class="collection with-header">
             <li class="collection-header"><h5>History</h5></li>
             <li v-for="item in items" :key="item.message" class="collection-item">
-                {{ item.title }} <a class="grey-text lighten-1" v-bind:href="'https://youtu.be/' + item.id">https://youtu.be/{{ item.id }}</a>
+<!--                <div class="row valign-wrapper">-->
+<!--                    <div class="col s11">-->
+                        {{ item.title }} <a class="grey-text lighten-1" v-bind:href="'https://youtu.be/' + item.id">https://youtu.be/{{ item.id }}</a>
+<!--                    </div>-->
+<!--                    <button class="btn-small grey lighten-1 waves-effect waves-light s1" v-on:click="add" id="add">-->
+<!--                        <i class="material-icons center">add</i>-->
+<!--                    </button>-->
+<!--                </div>-->
             </li>
         </ul>
 

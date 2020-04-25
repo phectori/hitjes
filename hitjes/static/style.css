@@ -19,3 +19,7 @@
   left: 0;
   z-index: 10;
 }
+
+.row {
+    margin-bottom: 0px
+}

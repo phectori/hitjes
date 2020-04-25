@@ -13,7 +13,7 @@ app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 socketIO = SocketIO(app, cors_allowed_origins="*")
 
 logging.basicConfig(
-    format="%(asctime)s %(levelname)s: %(message)s", level=logging.DEBUG
+    format="%(asctime)s %(levelname)s: %(message)s", level=logging.INFO
 )
 
 
@@ -24,7 +24,7 @@ def broadcast_state():
 
 
 def broadcast_message(msg: str):
-    logging.info("broadcast_message " + msg)
+    logging.info("broadcast_message: '{}'".format(msg))
     emit("message", msg, broadcast=True)
 
 
@@ -34,6 +34,7 @@ config.read("settings/settings.ini")
 if "googleapi" not in config:
     logging.info("No googleapi section in settings.ini")
 
+clients = set()
 player = Player(config, broadcast_state, broadcast_message)
 
 
@@ -48,39 +49,53 @@ def send_static(path):
     logging.info(path + " requested")
     return send_from_directory("static", path)
 
-
 @socketIO.on("message")
 def handle_message(message):
-    logging.info("Received client message: " + message)
+    logging.info("handle_message({}): {}".format(request.sid[-4:], message))
+
+
+@socketIO.on("connect")
+def handle_connect():
+    logging.info("handle_connect({})".format(request.sid[-4:]))
+    clients.add(request.sid)
+    broadcast_state()
+
+
+@socketIO.on("disconnect")
+def handle_disconnect():
+    logging.info("handle_disconnect({})".format(request.sid[-4:]))
+    clients.remove(request.sid)
+    broadcast_state()
 
 
 @socketIO.on("addUrl")
 def handle_add_url(yt_id):
-    logging.info("handle_add_url")
+    logging.info("handle_add_url({})".format(request.sid[-4:]))
     player.append(yt_id)
 
 
 @socketIO.on("requestState")
 def handle_request_state():
-    logging.info("handle_request_state")
+    logging.info("handle_request_state({})".format(request.sid[-4:]))
     json = get_state()
     emit("state", json, json=True)
 
 
 @socketIO.on("requestNext")
 def handle_request_next(current_yt_id):
-    logging.info("Next requested while currently playing: " + str(current_yt_id))
+    logging.info("handle_request_next({}): {}".format(request.sid[-4:], current_yt_id))
     player.next(str(current_yt_id))
 
 
 @socketIO.on("requestSkip")
-def handle_request_next(current_yt_id):
-    logging.info("Skip requested while currently playing: " + str(current_yt_id))
+def handle_request_skip(current_yt_id):
+    logging.info("handle_request_skip({}): {}".format(request.sid[-4:], current_yt_id))
     player.next(str(current_yt_id))
 
 
 @socketIO.on("requestUpdateTimestamp")
-def handle_request_next(data):
+def handle_request_update_timestamp(data):
+    logging.debug("handle_request_update_timestamp({})".format(request.sid[-4:]))
     player.update_timestamp(data["id"], float(data["timestamp"]))
 
 
@@ -91,6 +106,7 @@ def get_state():
     state["timestamp"] = player.get_timestamp()
     state["queue"] = player.get_queue()
     state["history"] = player.get_history()
+    state["clients"] = list(clients)
     return state
 
 
