@@ -1,21 +1,24 @@
 from collections import deque
 from collections import defaultdict
+from tinydb import TinyDB
 import googleapiclient.discovery
 import random
 import os
 import logging
 import threading
-import time
 from Error import YoutubeIdMalformedError
 
 
 class Player:
     def __init__(self, _config, _broadcast_state, _broadcast_message):
         self.queue = deque([])
-        self.history = deque([])
         self.cb_broadcast_state = _broadcast_state
         self.cb_broadcast_message = _broadcast_message
         self.titles = defaultdict(lambda: "")
+
+        # db
+        self.db = TinyDB('db.json')
+        self.history = self.db.table('history')
 
         self.google_api_key = str(_config["googleapi"].get("DeveloperKey", ""))
 
@@ -59,14 +62,14 @@ class Player:
 
         # Add to history when not empty
         if self.current["id"] != "":
-            self.history.appendleft(self.current)
+            self.history.insert(self.current)
 
         if len(self.queue) is not 0:
             self.current = self.queue.popleft()
         else:
             logging.info("Queue empty")
-            if len(self.history) > 0:
-                self.current = random.choice(list(self.history))
+            if len(self.history.all()) > 0:
+                self.current = random.choice(list(self.history.all()))
                 self.cb_broadcast_message(
                     "Queue empty, selecting a random video from history."
                 )
@@ -106,7 +109,9 @@ class Player:
         return list(self.queue)
 
     def get_history(self) -> []:
-        return list(self.history)
+        h = list(self.history.all())
+        h.reverse()
+        return h[0:20]
 
     def get_video_title(self, yt_id: str) -> str:
         logging.info("get_video_title")
