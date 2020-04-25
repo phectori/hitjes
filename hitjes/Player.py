@@ -9,12 +9,14 @@ from Error import YoutubeIdMalformedError
 
 
 class Player:
-    def __init__(self, _broadcast_state, _broadcast_message):
+    def __init__(self, _config, _broadcast_state, _broadcast_message):
         self.queue = deque([])
         self.history = deque([])
         self.cb_broadcast_state = _broadcast_state
         self.cb_broadcast_message = _broadcast_message
         self.titles = defaultdict(lambda: '')
+
+        self.google_api_key = str(_config["googleapi"].get("DeveloperKey", ""))
 
         # Semaphore for next function
         self.sem = threading.Semaphore()
@@ -109,13 +111,11 @@ class Player:
 
         api_service_name = "youtube"
         api_version = "v3"
-        # Todo: extract key from implementation
-        DEVELOPER_KEY = "AIzaSyCxmSPZ8Bp8v0FeEKES7PP62MSLig2YsLs"
 
         youtube = googleapiclient.discovery.build(
             api_service_name,
             api_version,
-            developerKey=DEVELOPER_KEY,
+            developerKey=self.google_api_key,
             cache_discovery=False,
         )
 

@@ -66,16 +66,9 @@ def handle_request_next(current_yt_id):
     player.next(str(current_yt_id))
 
 
-@socketIO.on("requestSkip")
-def handle_request_skip(current_yt_id):
-    logging.info("Skip requested while currently playing: " + str(current_yt_id))
-    player.next(str(current_yt_id))
-
-
 def get_state():
     state = dict()
-    state["currentId"] = player.get_current()
-    state["currentTitle"] = player.get_current_title()
+    state["current"] = player.get_current()
     state["timestamp"] = player.get_timestamp()
     state["queue"] = player.get_queue()
     state["history"] = player.get_history()
