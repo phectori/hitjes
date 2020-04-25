@@ -15,7 +15,7 @@ class Player:
         self.history = deque([])
         self.cb_broadcast_state = _broadcast_state
         self.cb_broadcast_message = _broadcast_message
-        self.titles = defaultdict(lambda: '')
+        self.titles = defaultdict(lambda: "")
 
         self.google_api_key = str(_config["googleapi"].get("DeveloperKey", ""))
 
@@ -90,7 +90,7 @@ class Player:
             title = self.get_video_title(yt_id)
             logging.info("Got title: '{}'".format(title))
         except:
-            logging.error('Failed to get video title')
+            logging.error("Failed to get video title")
 
         self.queue.append({"id": yt_id, "title": title})
 
@@ -128,9 +128,7 @@ class Player:
             cache_discovery=False,
         )
 
-        request = youtube.videos().list(
-            part="snippet", id=yt_id
-        )
+        request = youtube.videos().list(part="snippet", id=yt_id)
         response = request.execute()
         title = response["items"][0]["snippet"]["title"]
 
