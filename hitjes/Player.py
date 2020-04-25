@@ -4,56 +4,65 @@ import googleapiclient.discovery
 import random
 import os
 import logging
+import redis
+
 from Error import YoutubeIdMalformedError
 
 
 class Player:
-    def __init__(self, _broadcast_state, _broadcast_message):
-        self.queue = deque([])
-        self.history = deque([])
+    def __init__(self, _config, _broadcast_state, _broadcast_message):
+        self.r = redis.Redis(
+            host=_config["redis"].get("host", "localhost"),
+            port=int(_config["redis"].get("Port", 6379)),
+            db=0,
+        )
+
+        # Register callbacks
         self.cb_broadcast_state = _broadcast_state
         self.cb_broadcast_message = _broadcast_message
-        self.titles = defaultdict(lambda: '')
 
-        self.current = dict()
-        self.current["id"] = ""
-        self.timestamp_s = 0
+        self.queue = deque([])
+        self.history = deque([])
+
+        self.titles = defaultdict(lambda: "")
+        self.googleapikey = str(_config["googleapi"].get("DeveloperKey", ""))
+
+        self.r.set('current_video_id', "")
+        self.r.set('current_video_title', "")
 
     def get_current(self) -> str:
-        return self.current["id"]
+        return str(self.r.get('current_video_id'))
 
-    def get_timestamp(self):
-        return self.timestamp_s
 
     def update_timestamp(self, _timestamp_s, yt_id):
         """ Always take the highest timestamp of all the clients """
-        if self.current["id"] != yt_id:
+        if self.r.get('current_video_id') != yt_id:
             return
 
-        if self.timestamp_s > _timestamp_s:
-            self.timestamp_s = _timestamp_s
+        # if self.timestamp_s > _timestamp_s:
+        #     self.timestamp_s = _timestamp_s
 
     def next(self, current_id: str):
         # Only allow next when playing the current id.
-        if self.current["id"] != current_id:
+        if self.r.get('current_video_id') != current_id:
             logging.info("next: player video id does not match server video id")
             return
 
         # Add to history when not empty
-        if self.current["id"] != "":
-            self.history.appendleft(self.current)
+        if self.r.get('current_video_id') != "":
+            self.history.appendleft(self.r.get('current_video_id'))
 
         if len(self.queue) is not 0:
-            self.current = self.queue.popleft()
+            self.r.set('current_video_id', self.queue.popleft())
         else:
             logging.info("Queue empty")
             if len(self.history) > 0:
-                self.current = random.choice(list(self.history))
+                self.r.set('current_video_id', random.choice(list(self.history)))
                 self.cb_broadcast_message(
                     "Queue empty, selecting a random video from history."
                 )
             else:
-                self.current["id"] = ""
+                self.r.set('current_video_id', "")
 
         self.cb_broadcast_state()
 
@@ -65,11 +74,11 @@ class Player:
         try:
             self.get_video_title(yt_id)
         except:
-            logging.error('Failed to get video title')
+            logging.error("Failed to get video title")
 
         self.queue.append({"id": yt_id, "title": self.titles[yt_id]})
 
-        if self.current["id"] == "":
+        if self.r.get('current_video_id') == "":
             # When tot playing anything
             self.next("")
         else:
@@ -95,18 +104,14 @@ class Player:
 
         api_service_name = "youtube"
         api_version = "v3"
-        # Todo: extract key from implementation
-        DEVELOPER_KEY = "AIzaSyCxmSPZ8Bp8v0FeEKES7PP62MSLig2YsLs"
 
         youtube = googleapiclient.discovery.build(
             api_service_name,
             api_version,
-            developerKey=DEVELOPER_KEY,
+            developerKey=self.googleapikey,
             cache_discovery=False,
         )
 
-        request = youtube.videos().list(
-            part="snippet", id=yt_id
-        )
+        request = youtube.videos().list(part="snippet", id=yt_id)
         response = request.execute()
         self.titles[yt_id] = response["items"][0]["snippet"]["title"]
