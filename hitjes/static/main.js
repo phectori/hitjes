@@ -6,7 +6,9 @@ firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
 function onYouTubeIframeAPIReady() {
 
-var player = null;
+var player = null
+var playerState = -1
+var playerCurrentVideoId = 0
 var playerReady = false
 var timestamp = 0
 function createPlayer(yt_id, timestamp) {
@@ -88,35 +90,37 @@ socket.on('connect', function() {
     socket.emit('requestState')
 });
 
-socket.on('state', (state) => {
-    console.log(state)
+socket.on('state', (newState) => {
+    console.log(newState)
 
     queue.items = []
-    state.queue.forEach(function(entry) {
+    newState.queue.forEach(function(entry) {
         queue.items.push(entry)
     });
 
     history.items = []
-    state.history.forEach(function(entry) {
+    newState.history.forEach(function(entry) {
         history.items.push(entry)
     });
 
-    listenerCounter.clients = state.clients
+    listenerCounter.clients = newState.clients
 
-    timestamp = parseFloat(state.timestamp)
+    timestamp = parseFloat(newState.timestamp)
 
-    if (state.currentId === "")
+    if (newState.currentId === "")
         return
 
     if (!playerReady)
     {
-        createPlayer(state.currentId, timestamp)
+        createPlayer(newState.currentId, timestamp)
+        playerCurrentVideoId = newState.currentId
     }
-    else if (player.getVideoData().video_id != state.currentId ||
-             player.getPlayerState() == YT.PlayerState.ENDED)
+    else if (playerCurrentVideoId != newState.currentId ||
+             playerState == YT.PlayerState.ENDED)
     {
-        player.loadVideoById(state.currentId, timestamp)
-        M.toast({html: 'Playing: ' + state.currentTitle})
+        player.loadVideoById(newState.currentId, timestamp)
+        M.toast({html: 'Playing: ' + newState.currentTitle})
+        playerCurrentVideoId = newState.currentId
     }
     else
     {
@@ -147,8 +151,9 @@ var nextButton = new Vue({
 
 updateTimestampTimer = null
 function onPlayerStateChange(event) {
+    playerState = event.data
     if (event.data == YT.PlayerState.ENDED) {
-        socket.emit('requestNext', '' + player.getVideoData().video_id)
+        socket.emit('requestNext', '' + playerCurrentVideoId)
     }
     if (event.data == YT.PlayerState.PLAYING) {
         clearTimeout(updateTimestampTimer);
@@ -162,9 +167,9 @@ function updateTimestamp()
         return;
 
     // Only update when playing
-    if (player.getPlayerState() == YT.PlayerState.PLAYING)
+    if (playerState == YT.PlayerState.PLAYING)
     {
-        socket.emit('requestUpdateTimestamp', {id: player.getVideoData().video_id, timestamp: player.getCurrentTime()})
+        socket.emit('requestUpdateTimestamp', {id: playerCurrentVideoId, timestamp: player.getCurrentTime()})
         setTimeout(updateTimestamp, 1000);
     }
 }
