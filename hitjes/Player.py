@@ -58,6 +58,7 @@ class Player:
         # Only allow next when playing the current id.
         if self.current["id"] != current_id:
             logging.info("next: player video id does not match server video id")
+            self.sem_next.release()
             return
 
         # Add to history when not empty
