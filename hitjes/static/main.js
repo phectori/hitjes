@@ -122,12 +122,12 @@ socket.on('state', (newState) => {
         M.toast({html: 'Playing: ' + newState.currentTitle})
         playerCurrentVideoId = newState.currentId
     }
-    else
-    {
-        if( player.getCurrentTime() - 2 > timestamp ||
-            player.getCurrentTime() + 2 < timestamp)
-            player.seekTo(timestamp, true)
-    }
+    // else
+    // {
+    //     if( player.getCurrentTime() - 2 > timestamp ||
+    //         player.getCurrentTime() + 2 < timestamp)
+    //         player.seekTo(timestamp, true)
+    // }
 });
 
 socket.on('message', (msg) => {
