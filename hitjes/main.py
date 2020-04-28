@@ -96,7 +96,8 @@ def handle_request_skip(current_yt_id):
 @socketIO.on("requestUpdateTimestamp")
 def handle_request_update_timestamp(data):
     logging.debug("handle_request_update_timestamp({})".format(request.sid[-4:]))
-    player.update_timestamp(data["id"], float(data["timestamp"]))
+    if "timestamp" in data and "id" in data:
+        player.update_timestamp(data["id"], float(data["timestamp"]))
 
 
 def get_state():
