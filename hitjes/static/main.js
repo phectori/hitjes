@@ -4,13 +4,16 @@ tag.src = "https://www.youtube.com/iframe_api";
 var firstScriptTag = document.getElementsByTagName('script')[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-function onYouTubeIframeAPIReady() {
 
+// Global scope
 var player = null
 var playerState = -1
 var playerCurrentVideoId = 0
 var playerReady = false
 var timestamp = 0
+
+function onYouTubeIframeAPIReady() {
+
 function createPlayer(yt_id, timestamp) {
     player = new YT.Player('player', {
       height: '390',
@@ -122,12 +125,6 @@ socket.on('state', (newState) => {
         M.toast({html: 'Playing: ' + newState.currentTitle})
         playerCurrentVideoId = newState.currentId
     }
-    // else
-    // {
-    //     if( player.getCurrentTime() - 2 > timestamp ||
-    //         player.getCurrentTime() + 2 < timestamp)
-    //         player.seekTo(timestamp, true)
-    // }
 });
 
 socket.on('message', (msg) => {
@@ -141,7 +138,7 @@ var nextButton = new Vue({
     next: function (event) {
       if (event) {
         if (player !== null)
-            socket.emit('requestSkip', '' + player.getVideoData().video_id)
+            socket.emit('requestSkip', '' + playerCurrentVideoId)
         else
             socket.emit('requestSkip', '')
       }
