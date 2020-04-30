@@ -16,7 +16,7 @@ var socket = null
 function onYouTubeIframeAPIReady() {
 
 function createPlayer(yt_id, timestamp) {
-    player = new YT.Player('player', {
+    var p = new YT.Player('player', {
       height: '390',
       width: '640',
       videoId: yt_id,
@@ -29,7 +29,9 @@ function createPlayer(yt_id, timestamp) {
 }
 
 function onPlayerReady(event) {
-    playerReady = true
+    playerReady = true;
+    player = event.target;
+
     event.target.playVideo();
     event.target.seekTo(timestamp, true)
 }
