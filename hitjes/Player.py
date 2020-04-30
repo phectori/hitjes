@@ -6,6 +6,7 @@ import random
 import os
 import logging
 import threading
+import time
 from Error import YoutubeIdMalformedError
 
 
@@ -33,6 +34,9 @@ class Player:
         # Timestamp
         self.timestamp_s = 0.0
 
+        # Last skip timestamp
+        self.last_skip_timestamp = -1
+
     def get_current(self) -> str:
         return self.current["id"]
 
@@ -53,6 +57,13 @@ class Player:
         self.sem_update_timestamp.release()
 
     def next(self, current_id: str):
+
+        if (self.last_skip_timestamp + 5) >  time.time():
+            logging.info("next: ignore in window")
+            return
+
+        self.last_skip_timestamp = time.time()
+
         self.sem_next.acquire()
 
         # Only allow next when playing the current id.
