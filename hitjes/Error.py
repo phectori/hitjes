@@ -15,3 +15,11 @@ class YoutubeIdMalformedError(Error):
     def __init__(self, yt_id: str, message: str):
         self.yt_id = yt_id
         self.message = message
+
+
+class NextRequestIgnoredError(Error):
+    """
+    """
+
+    def __init__(self, message: str):
+        self.message = message

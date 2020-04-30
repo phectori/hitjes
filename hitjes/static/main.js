@@ -11,6 +11,7 @@ var playerState = -1
 var playerCurrentVideoId = 0
 var playerReady = false
 var timestamp = 0
+var socket = null
 
 function onYouTubeIframeAPIReady() {
 
@@ -85,12 +86,12 @@ var listenerCounter = new Vue({
   }
 })
 
-var socket = io();
+socket = io();
 
 socket.on('connect', function() {
     console.log("Connected")
     socket.emit('message', 'New client connected');
-    socket.emit('requestState')
+    socket.emit('request_state')
 });
 
 socket.on('state', (newState) => {
@@ -138,9 +139,9 @@ var nextButton = new Vue({
     next: function (event) {
       if (event) {
         if (player !== null)
-            socket.emit('requestSkip', '' + playerCurrentVideoId)
+            socket.emit('request_skip', '' + playerCurrentVideoId)
         else
-            socket.emit('requestSkip', '')
+            socket.emit('request_skip', '')
       }
     }
   }
@@ -150,7 +151,7 @@ updateTimestampTimer = null
 function onPlayerStateChange(event) {
     playerState = event.data
     if (event.data == YT.PlayerState.ENDED) {
-        socket.emit('requestNext', '' + playerCurrentVideoId)
+        socket.emit('request_next', '' + playerCurrentVideoId)
     }
     if (event.data == YT.PlayerState.PLAYING) {
         clearTimeout(updateTimestampTimer);
@@ -166,7 +167,7 @@ function updateTimestamp()
     // Only update when playing
     if (playerState == YT.PlayerState.PLAYING)
     {
-        socket.emit('requestUpdateTimestamp', {id: playerCurrentVideoId, timestamp: player.getCurrentTime()})
+        socket.emit('request_update_timestamp', {id: playerCurrentVideoId, timestamp: player.getCurrentTime()})
         setTimeout(updateTimestamp, 1000);
     }
 }
@@ -184,7 +185,7 @@ function processInput(input) {
         //M.toast({html: 'Requesting: ' + found_id})
         submitField.url = ''
 
-        socket.emit('addUrl', found_id);
+        socket.emit('add_url', found_id);
     }
     else
     {

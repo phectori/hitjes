@@ -21,6 +21,7 @@ setuptools.setup(
           'flask_socketio',
           'google-api-python-client',
           'eventlet',
+          'gitpython'
     ],
     python_requires='>=3.5',
 )

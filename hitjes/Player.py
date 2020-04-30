@@ -7,7 +7,7 @@ import os
 import logging
 import threading
 import time
-from Error import YoutubeIdMalformedError
+from Error import YoutubeIdMalformedError, NextRequestIgnoredError
 
 
 class Player:
@@ -18,8 +18,8 @@ class Player:
         self.titles = defaultdict(lambda: "")
 
         # db
-        self.db = TinyDB('db.json')
-        self.history = self.db.table('history')
+        self.db = TinyDB("db.json")
+        self.history = self.db.table("history")
 
         self.google_api_key = str(_config["googleapi"].get("DeveloperKey", ""))
 
@@ -58,9 +58,11 @@ class Player:
 
     def next(self, current_id: str):
 
-        if (self.last_skip_timestamp + 5) >  time.time():
+        if (self.last_skip_timestamp + 5) > time.time():
             logging.info("next: ignore in window")
-            return
+            raise NextRequestIgnoredError(
+                "Next request ignored, back off window active."
+            )
 
         self.last_skip_timestamp = time.time()
 
@@ -70,7 +72,9 @@ class Player:
         if self.current["id"] != current_id:
             logging.info("next: player video id does not match server video id")
             self.sem_next.release()
-            return
+            raise NextRequestIgnoredError(
+                "The currently playing video ID does not match the server video ID, refresh the page to fix."
+            )
 
         # Add to history when not empty
         if self.current["id"] != "":
@@ -142,7 +146,7 @@ class Player:
             api_service_name,
             api_version,
             developerKey=self.google_api_key,
-            cache_discovery=False,
+            cache_discovery=False,  # Todo: use the cache google gives you
         )
 
         request = youtube.videos().list(part="snippet", id=yt_id)
