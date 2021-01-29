@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="hitjes-phectori", # Replace with your own username
-    version="0.0.1",
+    version="0.0.2",
     author="Frits Kuipers",
     description="Listen to the same youtube list simultaneously",
     long_description=long_description,
@@ -18,10 +18,12 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-          'flask_socketio',
-          'google-api-python-client',
-          'eventlet',
-          'gitpython'
+          'flask_socketio==5.0.1',
+          'google-api-python-client==1.12.8',
+          'eventlet==0.30.0',
+          'gitpython==3.1.12',
+		  'tinydb==4.3.0',
+          'googleapi==0.1.0',
     ],
-    python_requires='>=3.5',
+    python_requires='>=3.7',
 )

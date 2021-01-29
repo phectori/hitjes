@@ -56,7 +56,7 @@ class Player:
 
         self.sem_update_timestamp.release()
 
-    def next(self, current_id: str):
+    def next(self, current_id: str, is_skip: bool):
 
         if (self.last_skip_timestamp + 5) > time.time():
             logging.info("next: ignore in window")
@@ -77,10 +77,14 @@ class Player:
             )
 
         # Add to history when not empty
-        if self.current["id"] != "":
-            self.history.insert(self.current)
+        if self.current["id"] != "" and not (is_skip and self.timestamp_s > 30):
+            try:
+                self.history.insert(dict(self.current))
+            except:
+                print(self.current)
+                logging.error("Failed to insert {} into db.".format(self.current))
 
-        if len(self.queue) is not 0:
+        if len(self.queue) != 0:
             self.current = self.queue.popleft()
         else:
             logging.info("Queue empty")
@@ -110,6 +114,7 @@ class Player:
             logging.info("Got title: '{}'".format(title))
         except:
             logging.error("Failed to get video title")
+            return
 
         self.queue.append({"id": yt_id, "title": title})
 
@@ -117,7 +122,7 @@ class Player:
 
         if self.current["id"] == "":
             # When tot playing anything
-            self.next("")
+            self.next("", False)
         else:
             self.cb_broadcast_state()
 
@@ -157,3 +162,34 @@ class Player:
             self.titles[yt_id] = title
 
         return title
+
+    def get_search_results(self, search_string: str) -> []:
+        logging.info("get_search_results")
+
+        os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
+        api_service_name = "youtube"
+        api_version = "v3"
+
+        youtube = googleapiclient.discovery.build(
+            api_service_name,
+            api_version,
+            developerKey=self.google_api_key,
+            cache_discovery=False,  # Todo: use the cache google gives you
+        )
+
+        request = youtube.search().list(
+            part="snippet",
+            maxResults=10,
+            q=search_string,
+            type="video",
+        )
+        response = request.execute()
+
+        results = []
+        for item in response["items"]:
+            results.append(
+                {"id": item["id"]["videoId"], "title": item["snippet"]["title"]}
+            )
+
+        return results

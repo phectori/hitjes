@@ -36,6 +36,23 @@ function onPlayerReady(event) {
     event.target.seekTo(timestamp, true)
 }
 
+var search = new Vue({
+  el: '#search',
+  data: {
+    items: [],
+    show: false
+  },
+  methods: {
+    submit: function (id) {
+      if (id) {
+        socket.emit('add_url', id);
+        this.items = [];
+        this.show = false;
+      }
+    }
+  }
+})
+
 var queue = new Vue({
   el: '#queue',
   data: {
@@ -130,6 +147,17 @@ socket.on('state', (newState) => {
     }
 });
 
+socket.on('search_results', (search_results) => {
+  console.log(search_results)
+  
+  search.show = true;
+
+  search.items = []
+  search_results.forEach(function(entry) {
+    search.items.push(entry)
+  });
+});
+
 socket.on('message', (msg) => {
     console.log(msg)
     M.toast({html: '' + msg})
@@ -178,7 +206,7 @@ function processInput(input) {
     var regex = /^.*(v=|be\/)(.{11}).*$/g;
     var match = regex.exec(input);
 
-    if (match.length > 2)
+    if (match != null && match.length > 2)
     {
         var found_id = match[2]
         console.log("Entered:   " + input)
@@ -191,7 +219,8 @@ function processInput(input) {
     }
     else
     {
-        M.toast({html: 'Failed to parse url'})
+        M.toast({html: 'No url, searching'})
+        socket.emit('search', input);
     }
 }
 

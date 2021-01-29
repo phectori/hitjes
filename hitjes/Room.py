@@ -39,6 +39,11 @@ class Room(Namespace):
         logging.info("on_add_url({})".format(request.sid[-4:]))
         self.player.append(yt_id)
 
+    def on_search(self, yt_id):
+        logging.info("on_search({})".format(request.sid[-4:]))
+        results = self.player.get_search_results(yt_id)
+        emit("search_results", results, json=True)
+
     def on_request_state(self):
         logging.info("on_request_state({})".format(request.sid[-4:]))
         json = self.get_state()
@@ -49,7 +54,7 @@ class Room(Namespace):
             logging.info(
                 "on_request_next({}): {}".format(request.sid[-4:], current_yt_id)
             )
-            self.player.next(str(current_yt_id))
+            self.player.next(str(current_yt_id), False)
         except NextRequestIgnoredError as err:
             pass
 
@@ -58,7 +63,7 @@ class Room(Namespace):
             logging.info(
                 "on_request_skip({}): {}".format(request.sid[-4:], current_yt_id)
             )
-            self.player.next(str(current_yt_id))
+            self.player.next(str(current_yt_id), True)
         except NextRequestIgnoredError as err:
             self.broadcast_message(err.message)
 
