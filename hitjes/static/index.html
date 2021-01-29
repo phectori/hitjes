@@ -39,8 +39,8 @@
             <li class="collection-header"><h5>Search</h5></li>
             <li v-for="item in items" :key="item.message" class="collection-item">
                <div class="row valign-wrapper">
-                   <div class="col s11">
-                        {{ item.title }} <a class="grey-text lighten-1" v-bind:href="'https://youtu.be/' + item.id">https://youtu.be/{{ item.id }}</a>
+                   <div class="col s11" v-html="item.title">
+                        <a class="grey-text lighten-1" v-bind:href="'https://youtu.be/' + item.id">https://youtu.be/{{ item.id }}</a>
                    </div>
                    <button class="btn-small grey lighten-1 waves-effect waves-light s1" v-on:click="submit(item.id)" id="add">
                        <i class="material-icons center">add</i>
