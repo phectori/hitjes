@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from flask import Flask, render_template, request, send_from_directory
 from flask_socketio import SocketIO, send, emit, Namespace, join_room, leave_room
 import logging
