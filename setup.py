@@ -20,7 +20,7 @@ setuptools.setup(
     install_requires=[
           'flask_socketio==5.0.1',
           'google-api-python-client==1.12.8',
-          'eventlet==0.30.0',
+          'eventlet==0.31.0',
           'gitpython==3.1.12',
 		  'tinydb==4.3.0',
           'googleapi==0.1.0',
